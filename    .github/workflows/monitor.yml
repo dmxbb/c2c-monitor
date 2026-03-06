@@ -2,7 +2,7 @@ name: Gate C2C 借贷监控
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # 每5分钟运行一次
+    - cron: '*/1 * * * *'  # 每1分钟运行一次
   workflow_dispatch:        # 允许手动触发
 
 jobs:
