@@ -8,6 +8,11 @@ Gate.com C2C 法币借贷监控脚本
 """
 
 import os
+import json
+import time
+import hmac
+import hashlib
+import base64
 import smtplib
 import urllib3
 import requests
@@ -20,8 +25,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ── 配置区（从环境变量读取） ──────────────────────────────────────────────────
 
-QQ_EMAIL     = os.environ["QQ_EMAIL"]
-QQ_AUTH_CODE = os.environ["QQ_AUTH_CODE"]
+# 飞书机器人 Webhook 地址和签名密钥
+FEISHU_WEBHOOK = os.environ.get("FEISHU_WEBHOOK", "https://open.feishu.cn/open-apis/bot/v2/hook/c9d2683f-a9b5-4b7e-9e03-2cf5c5f0d6e9")
+FEISHU_SECRET  = os.environ.get("FEISHU_SECRET", "ASwoTTwfyrLFs3uqc19Jn")
+
+# 邮件配置（暂时保留，不使用）
+# QQ_EMAIL     = os.environ["QQ_EMAIL"]
+# QQ_AUTH_CODE = os.environ["QQ_AUTH_CODE"]
 
 BASE_URL = "https://www.gate.com/json_svr/query_c2cloan"
 HEADERS  = {
@@ -58,9 +68,9 @@ def fetch_first_page(list_type: str, limit: int = 20) -> list:
         return []
 
 
-# ── 格式化邮件正文 ────────────────────────────────────────────────────────────
+# ── 格式化消息正文 ────────────────────────────────────────────────────────────
 
-def format_order_email(order: dict) -> str:
+def format_order_text(order: dict) -> str:
     rate        = order["rate"]
     period      = order["period"]
     amount      = order["initial_amount"]
@@ -101,23 +111,68 @@ def format_order_email(order: dict) -> str:
 ──────────────────────────────"""
 
 
-# ── 发送邮件 ──────────────────────────────────────────────────────────────────
+# ── 生成飞书签名 ──────────────────────────────────────────────────────────────
 
-def send_email(subject: str, body: str) -> None:
-    message = MIMEText(body, "plain", "utf-8")
-    message["From"]    = QQ_EMAIL
-    message["To"]      = "379473407@qq.com"
-    message["Subject"] = Header(subject, "utf-8")
+def gen_feishu_sign(secret: str, timestamp: int) -> str:
+    string_to_sign = f"{timestamp}\n{secret}"
+    hmac_code = hmac.new(
+        string_to_sign.encode("utf-8"),
+        digestmod=hashlib.sha256,
+    ).digest()
+    return base64.b64encode(hmac_code).decode("utf-8")
 
+
+# ── 发送飞书机器人消息 ────────────────────────────────────────────────────────
+
+def send_feishu(text: str) -> None:
+    if not FEISHU_WEBHOOK:
+        print("  ⚠️  未配置 FEISHU_WEBHOOK，跳过发送")
+        return
+
+    timestamp = int(time.time())
+    sign = gen_feishu_sign(FEISHU_SECRET, timestamp)
+
+    payload = {
+        "timestamp": str(timestamp),
+        "sign":      sign,
+        "msg_type":  "text",
+        "content": {
+            "text": text
+        }
+    }
     try:
-        smtp_obj = smtplib.SMTP_SSL("smtp.qq.com", 465)
-        smtp_obj.login(QQ_EMAIL, QQ_AUTH_CODE)
-        smtp_obj.sendmail(QQ_EMAIL, ["379473407@qq.com"], message.as_string())
-        print(f"  ✅ 邮件已发送：{subject}")
-    except smtplib.SMTPException as e:
-        print(f"  ❌ 邮件发送失败：{e}")
-    finally:
-        smtp_obj.quit()
+        resp = requests.post(
+            FEISHU_WEBHOOK,
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(payload),
+            timeout=10,
+        )
+        result = resp.json()
+        if result.get("StatusCode") == 0 or result.get("code") == 0:
+            print("  ✅ 飞书消息已发送")
+        else:
+            print(f"  ❌ 飞书发送失败：{result}")
+    except Exception as e:
+        print(f"  ❌ 飞书发送异常：{e}")
+
+
+# ── 发送邮件（暂时保留，不使用） ──────────────────────────────────────────────
+
+# def send_email(subject: str, body: str) -> None:
+#     message = MIMEText(body, "plain", "utf-8")
+#     message["From"]    = QQ_EMAIL
+#     message["To"]      = "379473407@qq.com"
+#     message["Subject"] = Header(subject, "utf-8")
+#
+#     try:
+#         smtp_obj = smtplib.SMTP_SSL("smtp.qq.com", 465)
+#         smtp_obj.login(QQ_EMAIL, QQ_AUTH_CODE)
+#         smtp_obj.sendmail(QQ_EMAIL, ["379473407@qq.com"], message.as_string())
+#         print(f"  ✅ 邮件已发送：{subject}")
+#     except smtplib.SMTPException as e:
+#         print(f"  ❌ 邮件发送失败：{e}")
+#     finally:
+#         smtp_obj.quit()
 
 
 # ── 主流程 ────────────────────────────────────────────────────────────────────
@@ -140,12 +195,9 @@ def main():
             if order.get("is_sell_out") == 0:
                 continue
 
-            print(f"  发送邮件：#{oid}...")
-            body = format_order_email(order)
-            send_email(
-                subject=f"【Gate C2C {label}】 #{oid} ¥{order['initial_amount']:,.0f} 日息{order['rate']*365}%",
-                body=body,
-            )
+            print(f"  发送飞书通知：#{oid}...")
+            text = format_order_text(order)
+            send_feishu(text)
             break
 
     print("\n本次运行完成")
