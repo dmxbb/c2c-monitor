@@ -21,8 +21,12 @@ def fetch_json(url):
         return json.loads(r.read())
 
 
+from urllib.parse import quote
+
 def fetch_text(url):
-    req = Request(url, headers={"User-Agent": "clash-converter/1.0"})
+    # 对URL中的非ASCII字符进行编码
+    encoded_url = quote(url, safe=':/?=&%#')
+    req = Request(encoded_url, headers={"User-Agent": "clash-converter/1.0"})
     with urlopen(req) as r:
         return r.read().decode("utf-8")
 
