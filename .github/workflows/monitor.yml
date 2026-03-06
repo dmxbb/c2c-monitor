@@ -1,4 +1,4 @@
-name: Gate C2C 借贷监控
+name: Gate C2C 监控
 
 on:
   schedule:
