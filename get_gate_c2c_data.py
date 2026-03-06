@@ -192,7 +192,7 @@ def main():
             oid = order.get("orderid")
 
             # 跳过已售罄的挂单（按需注释掉这行）
-            if order.get("is_sell_out") == 0:
+            if order.get("is_sell_out") == 1:
                 continue
 
             print(f"  发送飞书通知：#{oid}...")
