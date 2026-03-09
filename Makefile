@@ -1,8 +1,11 @@
 .PHONY: install-dev lint format test run
 
-# 第一次拿到项目跑这个
+install:
+	pip install -r requirements.txt
+
 install-dev:
-	pip install -e ".[dev]"
+	pip install -r requirements.txt
+	pip install -r requirements-dev.txt
 	pre-commit install
 	@echo "✅ 开发环境安装完成"
 
