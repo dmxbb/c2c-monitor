@@ -26,8 +26,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ── 配置区（从环境变量读取） ──────────────────────────────────────────────────
 
 # 飞书机器人 Webhook 地址和签名密钥
-FEISHU_WEBHOOK = os.environ.get("FEISHU_WEBHOOK", "https://open.feishu.cn/open-apis/bot/v2/hook/c9d2683f-a9b5-4b7e-9e03-2cf5c5f0d6e9")
-FEISHU_SECRET  = os.environ.get("FEISHU_SECRET", "ASwoTTwfyrLFs3uqc19Jn")
+FEISHU_WEBHOOK = os.environ.get("FEISHU_WEBHOOK", "")
+FEISHU_SECRET  = os.environ.get("FEISHU_SECRET", "")
 
 # 邮件配置（暂时保留，不使用）
 # QQ_EMAIL     = os.environ["QQ_EMAIL"]
