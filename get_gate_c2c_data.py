@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""
-Gate.com C2C 法币借贷监控脚本
-- 每次运行抓取第一页借入/借出挂单
-- 配合 GitHub Actions 每5分钟运行一次
-
-依赖: pip install requests
-"""
 
 import os
 import json
@@ -81,7 +74,7 @@ def format_order_text(order: dict) -> str:
     sell_out    = "已售罄" if order.get("is_sell_out") == 1 else "可借"
     renew       = "支持" if order.get("renew") == 1 else "不支持"
 
-    return f"""【Gate.com C2C 法币借贷挂单通知】
+    return f"""【C2C 法币借贷挂单通知】
 
 挂单类型：{loan_type}
 ──────────────────────────────
