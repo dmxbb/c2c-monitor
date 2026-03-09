@@ -28,4 +28,4 @@ jobs:
           QQ_AUTH_CODE: ${{ secrets.QQ_AUTH_CODE }}
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
-        run: python get_gate_c2c_data.py
+        run: python src/get_gate_c2c_data.py
