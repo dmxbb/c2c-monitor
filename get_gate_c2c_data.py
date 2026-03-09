@@ -197,4 +197,5 @@ def main():
 
 
 if __name__ == "__main__":
+    # 每分钟运行一次
     main()
