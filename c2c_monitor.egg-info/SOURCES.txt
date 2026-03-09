@@ -1,0 +1,8 @@
+README.md
+get_gate_c2c_data.py
+pyproject.toml
+c2c_monitor.egg-info/PKG-INFO
+c2c_monitor.egg-info/SOURCES.txt
+c2c_monitor.egg-info/dependency_links.txt
+c2c_monitor.egg-info/requires.txt
+c2c_monitor.egg-info/top_level.txt

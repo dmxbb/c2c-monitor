@@ -1,0 +1,45 @@
+default_language_version:
+  python: python3.10
+
+fail_fast: true
+
+repos:
+  - repo: local
+    hooks:
+      - id: check-added-large-files
+        name: 检查大文件
+        entry: check-added-large-files --maxkb 1024
+        language: system
+
+      - id: end-of-file-fixer
+        name: 修复文件末尾换行
+        entry: end-of-file-fixer
+        language: system
+
+      - id: trailing-whitespace
+        name: 删除行尾空格
+        entry: trailing-whitespace-fixer
+        language: system
+
+      - id: check-merge-conflict
+        name: 检查合并冲突
+        entry: check-merge-conflict
+        language: system
+
+      - id: check-yaml
+        name: 检查 YAML 格式
+        entry: check-yaml
+        language: system
+        types: [yaml]
+
+      - id: ruff-format
+        name: ruff 格式化
+        entry: ruff format
+        language: system
+        types: [python]
+
+      - id: ruff-lint
+        name: ruff lint
+        entry: ruff check --fix
+        language: system
+        types: [python]

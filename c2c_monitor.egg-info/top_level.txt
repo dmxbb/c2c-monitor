@@ -1,0 +1,1 @@
+get_gate_c2c_data
