@@ -1,9 +1,0 @@
-Metadata-Version: 2.4
-Name: c2c-monitor
-Version: 0.1.0
-Summary: c2c monitor script
-Requires-Python: >=3.10
-Provides-Extra: dev
-Requires-Dist: ruff; extra == "dev"
-Requires-Dist: pre-commit; extra == "dev"
-Requires-Dist: pytest; extra == "dev"
