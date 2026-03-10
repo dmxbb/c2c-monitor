@@ -20,4 +20,4 @@ RUN chmod 0644 /etc/cron.d/monitor \
     && crontab /etc/cron.d/monitor
 
 # 启动 cron
-CMD ["cron", "-f"]
+CMD ["bash", "-c", "env >> /etc/environment && cron -f"]
