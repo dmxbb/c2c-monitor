@@ -25,6 +25,8 @@ jobs:
           context: .
           push: true
           tags: dmxbb7107/c2c-monitor:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: 部署到服务器
         uses: appleboy/ssh-action@v1
