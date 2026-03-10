@@ -40,9 +40,5 @@ jobs:
             docker run -d \
               --name c2c-monitor \
               --restart unless-stopped \
-              -e FEISHU_WEBHOOK="${{ secrets.FEISHU_WEBHOOK }}" \
-              -e FEISHU_SECRET="${{ secrets.FEISHU_SECRET }}" \
+              --env-file /root/c2c-monitor.env \
               dmxbb7107/c2c-monitor:latest
-        env:
-          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
-          FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
