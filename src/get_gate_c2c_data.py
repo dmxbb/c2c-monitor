@@ -124,14 +124,46 @@ def gen_feishu_sign(secret: str, timestamp: int) -> str:
 # ── 发送飞书机器人消息 ────────────────────────────────────────────────────────
 
 
+_send_cache: dict[str, float] = {}
+
+CACHE_TTL_SECONDS = 2 * 3600  # 缓存 TTL：2 小时
+MIN_RESEND_SECONDS = 1 * 3600  # 相同内容最短重发间隔：1 小时
+
+
+def _text_hash(text: str) -> str:
+    """取消息内容的 MD5 作为缓存 key。"""
+    return hashlib.md5(text.encode("utf-8")).hexdigest()
+
+
+def _clean_expired_cache() -> None:
+    now = time.time()
+    expired = [k for k, v in _send_cache.items() if now - v > CACHE_TTL_SECONDS]
+    for k in expired:
+        del _send_cache[k]
+
+
 def send_feishu(text: str) -> None:
     if not FEISHU_WEBHOOK:
         print("  ⚠️  未配置 FEISHU_WEBHOOK，跳过发送")
         return
 
-    timestamp = int(time.time())
-    sign = gen_feishu_sign(FEISHU_SECRET, timestamp)
+    _clean_expired_cache()
 
+    now = time.time()
+    key = _text_hash(text)
+    last_sent = _send_cache.get(key)
+
+    if last_sent is not None:
+        elapsed = now - last_sent
+        if elapsed < MIN_RESEND_SECONDS:
+            remaining = int((MIN_RESEND_SECONDS - elapsed) / 60)
+            print(
+                f"  ⏭️  相同内容 {MIN_RESEND_SECONDS // 3600} 小时内已发过，还需等待 {remaining} 分钟"
+            )
+            return
+
+    timestamp = int(now)
+    sign = gen_feishu_sign(FEISHU_SECRET, timestamp)
     payload = {
         "timestamp": str(timestamp),
         "sign": sign,
@@ -148,6 +180,7 @@ def send_feishu(text: str) -> None:
         result = resp.json()
         if result.get("StatusCode") == 0 or result.get("code") == 0:
             print("  ✅ 飞书消息已发送")
+            _send_cache[key] = now  # 发送成功才写缓存
         else:
             print(f"  ❌ 飞书发送失败：{result}")
     except Exception as e:
