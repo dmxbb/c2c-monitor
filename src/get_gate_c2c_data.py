@@ -87,7 +87,6 @@ def format_order_text(order: dict) -> str:
   昵称：{order.get("nick")}
   姓名：{order.get("username")}
   等级：V{order.get("tier")}
-  最后上线：{order.get("online_status")} 分钟前
 
 借贷条件
   挂单金额：¥{amount:,.0f}
