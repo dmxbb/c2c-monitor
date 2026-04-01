@@ -124,9 +124,30 @@ def gen_feishu_sign(secret: str, timestamp: int) -> str:
 
 
 _send_cache: dict[str, float] = {}
+CACHE_FILE = os.path.join(os.path.dirname(__file__), "send_cache.json")
 
 CACHE_TTL_SECONDS = 2 * 3600  # 缓存 TTL：2 小时
 MIN_RESEND_SECONDS = 1 * 3600  # 相同内容最短重发间隔：1 小时
+
+
+def _load_cache() -> None:
+    """从文件加载缓存。"""
+    global _send_cache
+    try:
+        if os.path.exists(CACHE_FILE):
+            with open(CACHE_FILE, "r", encoding="utf-8") as f:
+                _send_cache = json.load(f)
+    except Exception as e:
+        print(f"  ⚠️  加载缓存失败：{e}")
+
+
+def _save_cache() -> None:
+    """将缓存保存到文件。"""
+    try:
+        with open(CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(_send_cache, f)
+    except Exception as e:
+        print(f"  ⚠️  保存缓存失败：{e}")
 
 
 def _text_hash(text: str) -> str:
@@ -139,6 +160,7 @@ def _clean_expired_cache() -> None:
     expired = [k for k, v in _send_cache.items() if now - v > CACHE_TTL_SECONDS]
     for k in expired:
         del _send_cache[k]
+    _save_cache()  # 清理后保存缓存
 
 
 def send_feishu(text: str) -> None:
@@ -146,6 +168,7 @@ def send_feishu(text: str) -> None:
         print("  ⚠️  未配置 FEISHU_WEBHOOK，跳过发送")
         return
 
+    _load_cache()  # 加载缓存
     _clean_expired_cache()
 
     now = time.time()
@@ -180,6 +203,7 @@ def send_feishu(text: str) -> None:
         if result.get("StatusCode") == 0 or result.get("code") == 0:
             print("  ✅ 飞书消息已发送")
             _send_cache[key] = now  # 发送成功才写缓存
+            _save_cache()  # 保存缓存
         else:
             print(f"  ❌ 飞书发送失败：{result}")
     except Exception as e:
